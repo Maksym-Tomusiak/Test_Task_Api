@@ -1,4 +1,5 @@
 ﻿using Infrastructure.Persistence;
+using Infrastructure.Persistence.Seeders;
 
 namespace Api.Modules;
 
@@ -13,6 +14,8 @@ public static class DbModule
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         if (bool.Parse(config["AllowSeeder"]!))
         {
+            await app.SeedRolesAsync();
+            await app.SeedUsersAsync();
         }
     }
 }

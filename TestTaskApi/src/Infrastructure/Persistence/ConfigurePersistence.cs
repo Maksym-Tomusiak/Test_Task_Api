@@ -1,5 +1,8 @@
-﻿using Domain.Roles;
+﻿using Application.Common.Interfaces.Queries;
+using Application.Common.Interfaces.Repositories;
+using Domain.Roles;
 using Domain.Users;
+using Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -38,5 +41,18 @@ public static class ConfigurePersistence
             .AddDefaultTokenProviders();
 
         services.AddScoped<ApplicationDbContextInitializer>();
+        services.AddRepositories();
+    }
+
+    private static void AddRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<IInviteRepository, InviteRepository>();
+        services.AddScoped<IInviteQueries, InviteRepository>();
+        
+        services.AddScoped<IDiaryEntryRepository, DiaryEntryRepository>();
+        services.AddScoped<IDiaryEntryQueries, DiaryEntryRepository>();
+        
+        services.AddScoped<IEntryImageRepository, EntryImageRepository>();
+        services.AddScoped<IEntryImageQueries, EntryImageRepository>();
     }
 }
