@@ -2,6 +2,8 @@ using System.Text;
 using Api.Modules;
 using Api.OptionsSetup;
 using Application;
+using Application.Common.Jobs;
+using Hangfire;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -72,8 +74,6 @@ builder.Host.UseWolverine(opts =>
     opts.Discovery.IncludeAssembly(typeof(Program).Assembly);
 });
 
-builder.Services.AddSignalR();
-
 var app = builder.Build();
 
 app.UseForwardedHeaders();
@@ -81,6 +81,12 @@ app.UseForwardedHeaders();
 app.UseRouting();
 
 app.UseCors("AllowFrontend");
+
+app.UseHangfireDashboard();
+RecurringJob.AddOrUpdate<UserCleanupJob>(
+    "purge-deleted-users",
+    job => job.Execute(CancellationToken.None),
+    Cron.Hourly);
 
 app.UseAuthentication();
 app.UseAuthorization();

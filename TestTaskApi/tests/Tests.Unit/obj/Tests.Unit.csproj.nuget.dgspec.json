@@ -4,14 +4,110 @@
     "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\tests\\Tests.Unit\\Tests.Unit.csproj": {}
   },
   "projects": {
-    "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\tests\\Tests.Unit\\Tests.Unit.csproj": {
+    "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Application\\Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\tests\\Tests.Unit\\Tests.Unit.csproj",
-        "projectName": "Tests.Unit",
-        "projectPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\tests\\Tests.Unit\\Tests.Unit.csproj",
+        "projectUniqueName": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Application\\Application.csproj",
+        "projectName": "Application",
+        "projectPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Application\\Application.csproj",
         "packagesPath": "C:\\Users\\maxto\\.nuget\\packages\\",
-        "outputPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\tests\\Tests.Unit\\obj\\",
+        "outputPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Application\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\maxto\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Domain\\Domain.csproj": {
+                "projectPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Domain\\Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[12.0.0, )"
+            },
+            "FluentValidation.DependencyInjectionExtensions": {
+              "target": "Package",
+              "version": "[12.0.0, )"
+            },
+            "LanguageExt.Core": {
+              "target": "Package",
+              "version": "[4.4.8, )"
+            },
+            "Microsoft.AspNetCore.Http.Abstractions": {
+              "target": "Package",
+              "version": "[2.3.0, )"
+            },
+            "WolverineFx": {
+              "target": "Package",
+              "version": "[4.10.0, )"
+            },
+            "WolverineFx.FluentValidation": {
+              "target": "Package",
+              "version": "[4.10.0, )"
+            },
+            "WolverineFx.Http": {
+              "target": "Package",
+              "version": "[4.10.0, )"
+            },
+            "WolverineFx.Http.FluentValidation": {
+              "target": "Package",
+              "version": "[4.10.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Domain\\Domain.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Domain\\Domain.csproj",
+        "projectName": "Domain",
+        "projectPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Domain\\Domain.csproj",
+        "packagesPath": "C:\\Users\\maxto\\.nuget\\packages\\",
+        "outputPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\maxto\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -43,9 +139,180 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Infrastructure\\Infrastructure.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Infrastructure\\Infrastructure.csproj",
+        "projectName": "Infrastructure",
+        "projectPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Infrastructure\\Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\maxto\\.nuget\\packages\\",
+        "outputPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Infrastructure\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\maxto\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Application\\Application.csproj": {
+                "projectPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Application\\Application.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "EFCore.NamingConventions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "Hangfire": {
+              "target": "Package",
+              "version": "[1.8.15, )"
+            },
+            "Hangfire.PostgreSql": {
+              "target": "Package",
+              "version": "[1.20.10, )"
+            },
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.10.0, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.4, )"
+            },
+            "SkiaSharp": {
+              "target": "Package",
+              "version": "[3.119.1, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[7.6.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\tests\\Tests.Unit\\Tests.Unit.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\tests\\Tests.Unit\\Tests.Unit.csproj",
+        "projectName": "Tests.Unit",
+        "projectPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\tests\\Tests.Unit\\Tests.Unit.csproj",
+        "packagesPath": "C:\\Users\\maxto\\.nuget\\packages\\",
+        "outputPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\tests\\Tests.Unit\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\maxto\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Application\\Application.csproj": {
+                "projectPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Application\\Application.csproj"
+              },
+              "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Infrastructure\\Infrastructure.csproj": {
+                "projectPath": "D:\\Projects\\TestTask\\Backend\\TestTaskApi\\src\\Infrastructure\\Infrastructure.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "FluentAssertions": {
+              "target": "Package",
+              "version": "[6.12.0, )"
+            },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
               "version": "[17.8.0, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.70, )"
             },
             "coverlet.collector": {
               "target": "Package",

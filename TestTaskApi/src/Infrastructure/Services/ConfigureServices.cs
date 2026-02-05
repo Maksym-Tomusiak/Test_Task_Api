@@ -1,5 +1,7 @@
 ﻿using Application.Common.Interfaces.Services;
 using Application.Common.Interfaces.Services.Emails;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Infrastructure.Services.Emails;
 using Infrastructure.Settings;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +16,8 @@ public static class ConfigureServices
         AddEmailService(services, configuration);
         AddCaptchaServices(services);
         AddCryptoService(services, configuration);
+        AddImageOptimisingService(services);
+        AddHangfire(services, configuration);
     }
     private static void AddEmailService(IServiceCollection services, IConfiguration configuration)
     {
@@ -38,4 +42,13 @@ public static class ConfigureServices
     {
         services.AddScoped<IImageOptimizer, SkiaImageOptimizer>();
     }
+    
+    private static void AddHangfire(IServiceCollection services, IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("HangfireConnection");
+        services.AddHangfire(config =>
+            config.UsePostgreSqlStorage((opt) => { opt.UseNpgsqlConnection(connectionString); }));
+        services.AddHangfireServer();
+    }
+
 }
