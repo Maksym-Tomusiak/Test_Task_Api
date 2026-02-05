@@ -121,6 +121,39 @@ namespace Infrastructure.Persistence.Migrations
                     b.ToTable("invites", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.RefreshTokens.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("Expires")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_revoked");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("token");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_refresh_tokens");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_refresh_tokens_user_id");
+
+                    b.ToTable("refresh_tokens", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Roles.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -402,6 +435,18 @@ namespace Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_entry_images_diary_entries_entry_id");
 
                     b.Navigation("Entry");
+                });
+
+            modelBuilder.Entity("Domain.RefreshTokens.RefreshToken", b =>
+                {
+                    b.HasOne("Domain.Users.User", "User")
+                        .WithOne()
+                        .HasForeignKey("Domain.RefreshTokens.RefreshToken", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_refresh_tokens_user_user_id");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

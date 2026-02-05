@@ -2,6 +2,7 @@
 using Domain.DiaryEntries;
 using Domain.EntryImages;
 using Domain.Invites;
+using Domain.RefreshTokens;
 using Domain.Roles;
 using Domain.Users;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -13,6 +14,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Invite> Invites { get; set; }
     public DbSet<DiaryEntry> DiaryEntries { get; set; }
     public DbSet<EntryImage> EntryImages { get; set; }

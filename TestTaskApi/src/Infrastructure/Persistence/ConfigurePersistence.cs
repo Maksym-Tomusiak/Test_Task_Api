@@ -54,5 +54,8 @@ public static class ConfigurePersistence
         
         services.AddScoped<IEntryImageRepository, EntryImageRepository>();
         services.AddScoped<IEntryImageQueries, EntryImageRepository>();
+        
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IRefreshTokenQueries, RefreshTokenRepository>();
     }
 }
