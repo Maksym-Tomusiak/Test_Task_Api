@@ -7,12 +7,13 @@ using Domain.Users;
 using LanguageExt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Wolverine;
 
 namespace Api.Controllers;
 
 [ApiController]
-public class UsersController(IMessageBus messageBus) : ControllerBase
+public class UsersController(IMessageBus messageBus, IMemoryCache cache) : ControllerBase
 {
     [HttpPost("api/users/register")]
     public async Task<IResult> Register(RegisterUserDto request, CancellationToken cancellationToken)
@@ -83,7 +84,12 @@ public class UsersController(IMessageBus messageBus) : ControllerBase
         var res = await messageBus.InvokeAsync<Either<UserException, string>>(cmd, cancellationToken);
 
         return res.Match<IResult>(
-            msg => Results.Ok(new { message = msg }),
+            msg => 
+            {
+                // Invalidate user cache
+                cache.Remove($"user_{userId}");
+                return Results.Ok(new { message = msg });
+            },
             ex => ex.ToIResult());
     }
 
@@ -91,11 +97,29 @@ public class UsersController(IMessageBus messageBus) : ControllerBase
     [HttpGet("api/users/me")]
     public async Task<IResult> GetCurrentUser(CancellationToken cancellationToken)
     {
-        var query = new GetCurrentUserQuery();
-        var res = await messageBus.InvokeAsync<Either<UserException, User>>(query, cancellationToken);
+        var userId = HttpContext.User.FindFirst("id")?.Value;
+        if (userId == null)
+        {
+            return Results.Unauthorized();
+        }
 
-        return res.Match<IResult>(
-            u => Results.Ok(UserDto.FromDomainModel(u)),
-            ex => ex.ToIResult());
+        var cacheKey = $"user_{userId}";
+        
+        if (!cache.TryGetValue(cacheKey, out UserDto? cachedUser))
+        {
+            var query = new GetCurrentUserQuery();
+            var res = await messageBus.InvokeAsync<Either<UserException, User>>(query, cancellationToken);
+
+            return res.Match<IResult>(
+                u => 
+                {
+                    var userDto = UserDto.FromDomainModel(u);
+                    cache.Set(cacheKey, userDto, TimeSpan.FromMinutes(5));
+                    return Results.Ok(userDto);
+                },
+                ex => ex.ToIResult());
+        }
+
+        return Results.Ok(cachedUser);
     }
 }

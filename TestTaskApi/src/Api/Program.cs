@@ -13,7 +13,10 @@ using Wolverine;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<Api.Modules.Validators.ValidationFilter>();
+});
 builder.Services.AddApplication();
 builder.Services.SetupServices();
 
