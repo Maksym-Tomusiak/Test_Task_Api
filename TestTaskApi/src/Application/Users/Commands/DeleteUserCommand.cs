@@ -52,7 +52,7 @@ public class DeleteUserCommandHandler
                 user.Delete();
                 await userManager.UpdateAsync(user);
                 return
-                    "User account deleted successfully. It can be restored not later than 24 hours from this moment.";
+                    "User account deleted successfully. It can be restored not later than 48 hours from this moment.";
             }
             // Admin deleting another user's account
             var result = await userManager.DeleteAsync(userToDelete);

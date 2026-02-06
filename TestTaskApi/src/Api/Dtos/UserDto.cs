@@ -5,10 +5,11 @@ namespace Api.Dtos;
 public record UserDto(
     Guid Id,
     string Username,
-    string Email)
+    string Email,
+    bool IsDeleted)
 {
     public static UserDto FromDomainModel(User user) 
-        => new(user.Id, user.UserName ?? "", user.Email ?? "");
+        => new(user.Id, user.UserName ?? "", user.Email ?? "", user.IsDeleted);
 }
 
 public record RegisterUserDto(
@@ -25,4 +26,5 @@ public record LoginUserDto(
 
 public record TokenResponseDto(
     string AccessToken,
-    string RefreshToken);
+    string RefreshToken,
+    UserDto User);

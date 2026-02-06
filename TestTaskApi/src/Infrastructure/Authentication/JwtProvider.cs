@@ -32,6 +32,7 @@ public class JwtProvider : IJwtProvider
         var claims = new Claim[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim("id", user.Id.ToString()), // Add this for the controller to find
             new Claim("role", role.Name),
             new Claim("name", user.UserName)
         };

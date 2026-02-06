@@ -8,7 +8,7 @@ public record GenerateCaptchaCommand();
 
 public static class GenerateCaptchaCommandHandler
 {
-    public static Task<(string CaptchaId, string CaptchaImageBase64)> Handle(
+    public static async Task<GenerateCaptchaResult> Handle(
         GenerateCaptchaCommand command,
         IMemoryCache cache,
         ICaptchaService captchaService,
@@ -20,8 +20,8 @@ public static class GenerateCaptchaCommandHandler
 
         cache.Set(captchaId, code, TimeSpan.FromMinutes(5));
 
-        var imageBase64 = Convert.ToBase64String(imageBytes);
+        var captchaImageBase64 = Convert.ToBase64String(imageBytes);
 
-        return Task.FromResult((captchaId, imageBase64));
+        return await Task.FromResult(new GenerateCaptchaResult(captchaId, captchaImageBase64));
     }
 }

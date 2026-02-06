@@ -12,7 +12,7 @@ public class CaptchaController(IMessageBus messageBus) : ControllerBase
     public async Task<IResult> GetCaptcha(CancellationToken cancellationToken)
     {
         var cmd = new GenerateCaptchaCommand();
-        var result = await messageBus.InvokeAsync<(string CaptchaId, string CaptchaImageBase64)>(cmd, cancellationToken);
+        var result = await messageBus.InvokeAsync<GenerateCaptchaResult>(cmd, cancellationToken);
 
         return Results.Ok(new CaptchaDto(result.CaptchaId, result.CaptchaImageBase64));
     }

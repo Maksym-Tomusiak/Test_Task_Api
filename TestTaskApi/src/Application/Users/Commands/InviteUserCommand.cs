@@ -35,7 +35,7 @@ public class InviteUserCommandHandler
         var message = new EmailMessage(
             ToEmail: command.Email,
             Subject: $"Invitation to join test task",
-            Body: $"""<br/><a href="{frontendUrl}/invite/{invite.Code}" target="_blank">Перейти до реєстрації</a>""",
+            Body: $"""<br/><a href="{frontendUrl}register?invite={invite.Code}" target="_blank">Перейти до реєстрації</a>""",
             IsHtml: true);
         
         await emailQueue.QueueEmail(message);

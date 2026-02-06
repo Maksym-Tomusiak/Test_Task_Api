@@ -16,6 +16,10 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<Api.Modules.Validators.ValidationFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
 builder.Services.AddApplication();
 builder.Services.SetupServices();
@@ -76,6 +80,8 @@ builder.Host.UseWolverine(opts =>
     opts.Discovery.IncludeAssembly(typeof(ConfigureApplication).Assembly);
     opts.Discovery.IncludeAssembly(typeof(Program).Assembly);
 });
+
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 

@@ -37,10 +37,10 @@ public class UsersController(IMessageBus messageBus, IMemoryCache cache) : Contr
     public async Task<IResult> Login(LoginUserDto request, CancellationToken cancellationToken)
     {
         var cmd = new LoginUserCommand(request.Username, request.Password);
-        var res = await messageBus.InvokeAsync<Either<UserException, (string AccessToken, string RefreshToken)>>(cmd, cancellationToken);
+        var res = await messageBus.InvokeAsync<Either<UserException, (string AccessToken, string RefreshToken, User User)>>(cmd, cancellationToken);
 
         return res.Match<IResult>(
-            tokens =>
+            result =>
             {
                 var cookieOptions = new CookieOptions
                 {
@@ -50,9 +50,27 @@ public class UsersController(IMessageBus messageBus, IMemoryCache cache) : Contr
                     Expires = DateTime.UtcNow.AddDays(7)
                 };
 
-                Response.Cookies.Append("RefreshToken", tokens.RefreshToken, cookieOptions);
-                return Results.Ok(new TokenResponseDto(tokens.AccessToken, tokens.RefreshToken));
+                Response.Cookies.Append("RefreshToken", result.RefreshToken, cookieOptions);
+                return Results.Ok(new TokenResponseDto(result.AccessToken, result.RefreshToken, UserDto.FromDomainModel(result.User)));
             },
+            ex => ex.ToIResult());
+    }
+
+    [HttpPost("api/users/refresh")]
+    public async Task<IResult> RefreshToken(CancellationToken cancellationToken)
+    {
+        var refreshToken = Request.Cookies["RefreshToken"];
+        
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            return Results.Unauthorized();
+        }
+
+        var cmd = new RefreshUserCommand(refreshToken);
+        var res = await messageBus.InvokeAsync<Either<UserException, string>>(cmd, cancellationToken);
+
+        return res.Match<IResult>(
+            accessToken => Results.Ok(new { accessToken }),
             ex => ex.ToIResult());
     }
 
@@ -63,8 +81,20 @@ public class UsersController(IMessageBus messageBus, IMemoryCache cache) : Contr
         var cmd = new RestoreUserCommand();
         var res = await messageBus.InvokeAsync<Either<UserException, User>>(cmd, cancellationToken);
 
+        var httpContext = HttpContext;
+        var userId = httpContext.User.FindFirst("id")?.Value;
+        
+        if (userId == null)
+        {
+            return Results.Unauthorized();
+        }
+        
         return res.Match<IResult>(
-            u => Results.Ok(UserDto.FromDomainModel(u)),
+            u =>
+            {
+                cache.Remove($"user_{userId}");
+                return Results.Ok(UserDto.FromDomainModel(u));
+            },
             ex => ex.ToIResult());
     }
 

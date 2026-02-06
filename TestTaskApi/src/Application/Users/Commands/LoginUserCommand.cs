@@ -16,7 +16,7 @@ public class LoginUserCommandHandler
 {
     private const string UserRoleName = "User";
 
-    public static async Task<Either<UserException, (string AccessToken, string RefreshToken)>> Handle(
+    public static async Task<Either<UserException, (string AccessToken, string RefreshToken, User User)>> Handle(
         LoginUserCommand command, 
         IJwtProvider jwtProvider,
         UserManager<User> userManager,
@@ -65,6 +65,6 @@ public class LoginUserCommandHandler
             return new UserUnknownException(user.Id, e);
         }
 
-        return tokens;
+        return (tokens.AccessToken, tokens.RefreshToken, user);
     }
 }
