@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Api.Modules;
 using Api.OptionsSetup;
 using Application;
@@ -7,6 +8,7 @@ using Hangfire;
 using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Wolverine;
 
@@ -75,6 +77,19 @@ builder.Services
 builder.Services.ConfigureOptions<JwtOptionsSetup>();
 builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("login", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 5;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+    
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 builder.Host.UseWolverine(opts =>
 {
     opts.Discovery.IncludeAssembly(typeof(ConfigureApplication).Assembly);
@@ -90,6 +105,8 @@ app.UseForwardedHeaders();
 app.UseRouting();
 
 app.UseCors("AllowFrontend");
+
+app.UseRateLimiter();
 
 app.UseHangfireDashboard();
 RecurringJob.AddOrUpdate<UserCleanupJob>(

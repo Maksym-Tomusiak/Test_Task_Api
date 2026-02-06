@@ -7,6 +7,7 @@ using Domain.Users;
 using LanguageExt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
 using Wolverine;
 
@@ -34,6 +35,7 @@ public class UsersController(IMessageBus messageBus, IMemoryCache cache) : Contr
     }
 
     [HttpPost("api/users/login")]
+    [EnableRateLimiting("login")]
     public async Task<IResult> Login(LoginUserDto request, CancellationToken cancellationToken)
     {
         var cmd = new LoginUserCommand(request.Username, request.Password);
