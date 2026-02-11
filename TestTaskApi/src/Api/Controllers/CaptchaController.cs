@@ -1,18 +1,17 @@
-using Api.Dtos;
-using Application.Captcha.Commands;
+using BLL.Dtos;
+using BLL.Interfaces;
+using BLL.Interfaces.CRUD;
 using Microsoft.AspNetCore.Mvc;
-using Wolverine;
 
 namespace Api.Controllers;
 
 [ApiController]
-public class CaptchaController(IMessageBus messageBus) : ControllerBase
+public class CaptchaController(ICaptchaBusinessService captchaBusinessService) : ControllerBase
 {
     [HttpGet("api/captcha")]
-    public async Task<IResult> GetCaptcha(CancellationToken cancellationToken)
+    public IResult GetCaptcha()
     {
-        var cmd = new GenerateCaptchaCommand();
-        var result = await messageBus.InvokeAsync<GenerateCaptchaResult>(cmd, cancellationToken);
+        var result = captchaBusinessService.GenerateCaptcha();
 
         return Results.Ok(new CaptchaDto(result.CaptchaId, result.CaptchaImageBase64));
     }

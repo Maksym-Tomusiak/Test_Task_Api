@@ -1,6 +1,6 @@
+using BLL.Models;
+using BLL.Services.Emails;
 using FluentAssertions;
-using Infrastructure.Services.Emails;
-using Infrastructure.Settings;
 using Microsoft.Extensions.Options;
 using Moq;
 
