@@ -1,7 +1,8 @@
-using Application.Common.Interfaces.Services.Emails;
-using Application.Common.Models;
+
+using BLL.Interfaces.Emails;
+using BLL.Models;
+using BLL.Services.Emails;
 using FluentAssertions;
-using Infrastructure.Services.Emails;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 

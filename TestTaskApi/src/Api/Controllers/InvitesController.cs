@@ -1,21 +1,20 @@
-using Api.Dtos;
-using Api.Modules.Errors;
-using Application.Common.Models;
-using Application.Invites.Queries;
-using Application.Users.Commands;
-using Application.Users.Exceptions;
-using Domain.Invites;
-using LanguageExt;
+using BLL.Dtos;
+using BLL.Interfaces;
+using BLL.Interfaces.CRUD;
+using BLL.Modules.Errors;
+using DAL.Repositories.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
-using Wolverine;
 
 namespace Api.Controllers;
 
 [ApiController]
-public class InvitesController(IMessageBus messageBus, IMemoryCache cache) : ControllerBase
+public class InvitesController(
+    IUserService userService,
+    IInviteService inviteService,
+    IMemoryCache cache) : ControllerBase
 {
     private const string InvitesResetTokenKey = "Invites_Reset_Token";
 
@@ -23,12 +22,11 @@ public class InvitesController(IMessageBus messageBus, IMemoryCache cache) : Con
     [HttpPost("api/invites")]
     public async Task<IResult> CreateInvite(CreateInviteDto request, CancellationToken cancellationToken)
     {
-        var cmd = new InviteUserCommand(request.Email);
-        var res = await messageBus.InvokeAsync<Either<UserException, string>>(cmd, cancellationToken);
+        var res = await userService.InviteUserAsync(request.Email, cancellationToken);
 
         if (res.IsRight)
         {
-            InvalidateInvitesList();
+            inviteService.InvalidateInvitesCache();
         }
 
         return res.Match<IResult>(
@@ -39,7 +37,7 @@ public class InvitesController(IMessageBus messageBus, IMemoryCache cache) : Con
     [Authorize(Roles = "Admin")]
     [HttpGet("api/invites")]
     public async Task<IResult> GetInvites(
-        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
@@ -50,10 +48,9 @@ public class InvitesController(IMessageBus messageBus, IMemoryCache cache) : Con
             entry.AddExpirationToken(GetInvitesListResetToken());
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2);
 
-            var query = new GetAllInvitesQuery(pageNumber, pageSize);
-            var domainResult = await messageBus.InvokeAsync<PaginatedResult<Invite>>(query, cancellationToken);
-            
-            return PaginatedResult<Invite>.MapFrom(domainResult, InviteDto.FromDomainModel);
+            var domainResult = await inviteService.GetAllPaginatedAsync(pageNumber, pageSize, cancellationToken);
+
+            return PaginatedResult<InviteDto>.MapFrom(domainResult, InviteDto.FromDomainModel);
         });
 
         return Results.Ok(result);
@@ -69,7 +66,7 @@ public class InvitesController(IMessageBus messageBus, IMemoryCache cache) : Con
             return Results.Ok(cachedInvite);
         }
 
-        var result = await messageBus.InvokeAsync<Option<Invite>>(new GetInviteByCodeQuery(code), cancellationToken);
+        var result = await inviteService.GetByCodeAsync(code, cancellationToken);
 
         return result.Match<IResult>(
             invite =>
@@ -90,14 +87,5 @@ public class InvitesController(IMessageBus messageBus, IMemoryCache cache) : Con
         });
 
         return new CancellationChangeToken(cts!.Token);
-    }
-
-    private void InvalidateInvitesList()
-    {
-        if (cache.TryGetValue(InvitesResetTokenKey, out CancellationTokenSource? cts))
-        {
-            cts?.Cancel();
-            cache.Remove(InvitesResetTokenKey);
-        }
     }
 }

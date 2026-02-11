@@ -1,33 +1,27 @@
-using Api.Dtos;
-using Api.Modules.Errors;
-using Application.Users.Commands;
-using Application.Users.Exceptions;
-using Application.Users.Queries;
-using Domain.Users;
-using LanguageExt;
+using BLL.Dtos;
+using BLL.Interfaces;
+using BLL.Interfaces.CRUD;
+using BLL.Modules.Errors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
-using Wolverine;
 
 namespace Api.Controllers;
 
 [ApiController]
-public class UsersController(IMessageBus messageBus, IMemoryCache cache) : ControllerBase
+public class UsersController(IUserService userService, IMemoryCache cache) : ControllerBase
 {
     [HttpPost("api/users/register")]
     public async Task<IResult> Register(RegisterUserDto request, CancellationToken cancellationToken)
     {
-        var cmd = new RegisterUserCommand(
+        var res = await userService.RegisterAsync(
             request.InviteCode,
             request.Email,
             request.Password,
             request.Username,
             request.CaptchaId,
-            request.CaptchaCode);
-        
-        var res = await messageBus.InvokeAsync<Either<UserException, User>>(cmd, cancellationToken);
+            request.CaptchaCode,
+            cancellationToken);
 
         return res.Match<IResult>(
             u => Results.Created($"/api/users/{u.Id}", UserDto.FromDomainModel(u)),
@@ -35,11 +29,9 @@ public class UsersController(IMessageBus messageBus, IMemoryCache cache) : Contr
     }
 
     [HttpPost("api/users/login")]
-    [EnableRateLimiting("login")]
     public async Task<IResult> Login(LoginUserDto request, CancellationToken cancellationToken)
     {
-        var cmd = new LoginUserCommand(request.Username, request.Password);
-        var res = await messageBus.InvokeAsync<Either<UserException, (string AccessToken, string RefreshToken, User User)>>(cmd, cancellationToken);
+        var res = await userService.LoginAsync(request.Username, request.Password, cancellationToken);
 
         return res.Match<IResult>(
             result =>
@@ -62,14 +54,13 @@ public class UsersController(IMessageBus messageBus, IMemoryCache cache) : Contr
     public async Task<IResult> RefreshToken(CancellationToken cancellationToken)
     {
         var refreshToken = Request.Cookies["RefreshToken"];
-        
+
         if (string.IsNullOrEmpty(refreshToken))
         {
             return Results.Unauthorized();
         }
 
-        var cmd = new RefreshUserCommand(refreshToken);
-        var res = await messageBus.InvokeAsync<Either<UserException, string>>(cmd, cancellationToken);
+        var res = await userService.RefreshTokenAsync(refreshToken, cancellationToken);
 
         return res.Match<IResult>(
             accessToken => Results.Ok(new { accessToken }),
@@ -80,17 +71,15 @@ public class UsersController(IMessageBus messageBus, IMemoryCache cache) : Contr
     [HttpPost("api/users/restore")]
     public async Task<IResult> Restore(CancellationToken cancellationToken)
     {
-        var cmd = new RestoreUserCommand();
-        var res = await messageBus.InvokeAsync<Either<UserException, User>>(cmd, cancellationToken);
+        var res = await userService.RestoreAsync(cancellationToken);
 
-        var httpContext = HttpContext;
-        var userId = httpContext.User.FindFirst("id")?.Value;
-        
+        var userId = HttpContext.User.FindFirst("id")?.Value;
+
         if (userId == null)
         {
             return Results.Unauthorized();
         }
-        
+
         return res.Match<IResult>(
             u =>
             {
@@ -104,21 +93,18 @@ public class UsersController(IMessageBus messageBus, IMemoryCache cache) : Contr
     [HttpDelete("api/users/me")]
     public async Task<IResult> DeleteCurrentUser(CancellationToken cancellationToken)
     {
-        var httpContext = HttpContext;
-        var userId = httpContext.User.FindFirst("id")?.Value;
-        
+        var userId = HttpContext.User.FindFirst("id")?.Value;
+
         if (userId == null)
         {
             return Results.Unauthorized();
         }
 
-        var cmd = new DeleteUserCommand(Guid.Parse(userId));
-        var res = await messageBus.InvokeAsync<Either<UserException, string>>(cmd, cancellationToken);
+        var res = await userService.DeleteAsync(Guid.Parse(userId), cancellationToken);
 
         return res.Match<IResult>(
-            msg => 
+            msg =>
             {
-                // Invalidate user cache
                 cache.Remove($"user_{userId}");
                 return Results.Ok(new { message = msg });
             },
@@ -136,14 +122,13 @@ public class UsersController(IMessageBus messageBus, IMemoryCache cache) : Contr
         }
 
         var cacheKey = $"user_{userId}";
-        
+
         if (!cache.TryGetValue(cacheKey, out UserDto? cachedUser))
         {
-            var query = new GetCurrentUserQuery();
-            var res = await messageBus.InvokeAsync<Either<UserException, User>>(query, cancellationToken);
+            var res = await userService.GetCurrentUserAsync(cancellationToken);
 
             return res.Match<IResult>(
-                u => 
+                u =>
                 {
                     var userDto = UserDto.FromDomainModel(u);
                     cache.Set(cacheKey, userDto, TimeSpan.FromMinutes(5));

@@ -33,7 +33,16 @@ dotnet user-secrets set "Encryption:Key" "u7k1+sIp3/Xy7f9Q2qL5vP8xR9kL4mZ1n3oP6q
 dotnet user-secrets set "FrontendUrl" "http://localhost:5173/"
 ```
 
-### 2. Run the Application
+### 2. Run db
+
+Create postgres db using appsettings.json connection string content
+or run the following command:
+
+```bash
+docker run --name test-task-postgres -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=test-task-db -d postgres
+```
+
+### 3. Run the Application
 
 From the `TestTaskApi/src/Api` directory:
 

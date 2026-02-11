@@ -1,21 +1,19 @@
-using Api.Dtos;
-using Api.Modules.Errors;
-using Application.Common.Interfaces.Services;
-using Application.DiaryEntries.Commands;
-using Application.DiaryEntries.Exceptions;
-using Application.DiaryEntries.Queries;
-using Domain.DiaryEntries;
-using LanguageExt;
+using BLL.Dtos;
+using BLL.Interfaces;
+using BLL.Interfaces.CRUD;
+using BLL.Modules.Errors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using Wolverine;
 
 namespace Api.Controllers;
 
 [ApiController]
 [Authorize]
-public class DiaryEntriesController(IMessageBus messageBus, ICryptoService cryptoService, IMemoryCache cache) : ControllerBase
+public class DiaryEntriesController(
+    IDiaryEntryService diaryEntryService,
+    ICryptoService cryptoService,
+    IMemoryCache cache) : ControllerBase
 {
     [HttpGet("api/diary-entries")]
     public async Task<IResult> GetDiaryEntries(
@@ -32,9 +30,15 @@ public class DiaryEntriesController(IMessageBus messageBus, ICryptoService crypt
             return Results.Unauthorized();
         }
 
-        var query = new GetAllDiaryEntriesByUserIdQuery(Guid.Parse(userId), pageNumber, pageSize, searchTerm, startDate, endDate);
-        var paginatedResult = await messageBus.InvokeAsync<PaginatedDiaryEntries>(query, cancellationToken);
-        
+        var paginatedResult = await diaryEntryService.GetAllByUserIdAsync(
+            Guid.Parse(userId),
+            pageNumber,
+            pageSize,
+            searchTerm,
+            startDate,
+            endDate,
+            cancellationToken);
+
         var dtos = paginatedResult.Items.Select(e =>
         {
             var decryptedContent = cryptoService.Decrypt(e.Entry.EncryptedContent, e.Entry.InitializationVector);
@@ -61,17 +65,16 @@ public class DiaryEntriesController(IMessageBus messageBus, ICryptoService crypt
         }
 
         var cacheKey = $"diary_entry_{id}_user_{userId}";
-        
+
         if (!cache.TryGetValue(cacheKey, out DiaryEntryDto? cachedEntry))
         {
-            var query = new GetDiaryEntryByIdQuery(id);
-            var result = await messageBus.InvokeAsync<Option<DiaryEntryWithImageId>>(query, cancellationToken);
+            var result = await diaryEntryService.GetByIdAsync(id, cancellationToken);
 
             if (result.IsNone)
             {
                 return Results.NotFound(new { error = "Diary entry not found" });
             }
-            
+
             var entryWithImage = result.First();
             if (entryWithImage.Entry.UserId.ToString() != userId)
             {
@@ -83,7 +86,7 @@ public class DiaryEntriesController(IMessageBus messageBus, ICryptoService crypt
             cache.Set(cacheKey, entryDto, TimeSpan.FromMinutes(5));
             return Results.Ok(entryDto);
         }
-        
+
         return Results.Ok(cachedEntry);
     }
 
@@ -96,25 +99,23 @@ public class DiaryEntriesController(IMessageBus messageBus, ICryptoService crypt
             imageStream = image.OpenReadStream();
         }
 
-        var cmd = new CreateDiaryEntryCommand(request.Content, imageStream);
-        var res = await messageBus.InvokeAsync<Either<DiaryEntryException, DiaryEntry>>(cmd, cancellationToken);
+        var res = await diaryEntryService.CreateAsync(request.Content, imageStream, cancellationToken);
 
         return await res.MatchAsync<IResult>(
             async entry =>
             {
                 var decryptedContent = cryptoService.Decrypt(entry.EncryptedContent, entry.InitializationVector);
                 Guid? imageId = null;
-                
+
                 if (entry.HasImage)
                 {
-                    var query = new GetDiaryEntryByIdQuery(entry.Id.Value);
-                    var entryWithImageOption = await messageBus.InvokeAsync<Option<DiaryEntryWithImageId>>(query, cancellationToken);
-                    imageId = entryWithImageOption.Match(
+                    var entryResult = await diaryEntryService.GetByIdAsync(entry.Id.Value, cancellationToken);
+                    imageId = entryResult.Match(
                         e => e.ImageId,
                         () => null
                     );
                 }
-                
+
                 return Results.Created($"/api/diary-entries/{entry.Id.Value}", DiaryEntryDto.FromDomainModel(entry, decryptedContent, imageId));
             },
             ex => ex.ToIResult());
@@ -134,8 +135,7 @@ public class DiaryEntriesController(IMessageBus messageBus, ICryptoService crypt
             imageStream = image.OpenReadStream();
         }
 
-        var cmd = new UpdateDiaryEntryCommand(id, request.Content, imageStream, deleteCurrentImage);
-        var res = await messageBus.InvokeAsync<Either<DiaryEntryException, DiaryEntry>>(cmd, cancellationToken);
+        var res = await diaryEntryService.UpdateAsync(id, request.Content, imageStream, deleteCurrentImage, cancellationToken);
 
         return await res.MatchAsync<IResult>(
             async entry =>
@@ -143,24 +143,22 @@ public class DiaryEntriesController(IMessageBus messageBus, ICryptoService crypt
                 var userId = HttpContext.User.FindFirst("id")?.Value;
                 if (userId != null)
                 {
-                    // Invalidate related caches
                     cache.Remove($"diary_entry_{id}_user_{userId}");
                     cache.Remove($"entry_image_{id}_user_{userId}");
                 }
 
                 var decryptedContent = cryptoService.Decrypt(entry.EncryptedContent, entry.InitializationVector);
                 Guid? imageId = null;
-                
+
                 if (entry.HasImage)
                 {
-                    var query = new GetDiaryEntryByIdQuery(entry.Id.Value);
-                    var entryWithImageOption = await messageBus.InvokeAsync<Option<DiaryEntryWithImageId>>(query, cancellationToken);
-                    imageId = entryWithImageOption.Match(
+                    var entryResult = await diaryEntryService.GetByIdAsync(entry.Id.Value, cancellationToken);
+                    imageId = entryResult.Match(
                         e => e.ImageId,
                         () => null
                     );
                 }
-                
+
                 return Results.Ok(DiaryEntryDto.FromDomainModel(entry, decryptedContent, imageId));
             },
             ex => ex.ToIResult());
@@ -169,16 +167,14 @@ public class DiaryEntriesController(IMessageBus messageBus, ICryptoService crypt
     [HttpDelete("api/diary-entries/{id}")]
     public async Task<IResult> DeleteDiaryEntry(Guid id, CancellationToken cancellationToken)
     {
-        var cmd = new DeleteDiaryEntryCommand(id);
-        var res = await messageBus.InvokeAsync<Either<DiaryEntryException, DiaryEntry>>(cmd, cancellationToken);
+        var res = await diaryEntryService.DeleteAsync(id, cancellationToken);
 
         return res.Match<IResult>(
-            entry => 
+            entry =>
             {
                 var userId = HttpContext.User.FindFirst("id")?.Value;
                 if (userId != null)
                 {
-                    // Invalidate related caches
                     cache.Remove($"diary_entry_{id}_user_{userId}");
                     cache.Remove($"entry_image_{id}_user_{userId}");
                 }
