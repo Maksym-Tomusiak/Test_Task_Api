@@ -1,30 +1,30 @@
 using System.Text;
 using System.Threading.RateLimiting;
-using Api.Modules;
-using Api.OptionsSetup;
-using Application;
-using Application.Common.Jobs;
+using BLL;
+using BLL.Jobs;
+using BLL.Modules.OptionsSetup;
+using BLL.Modules.Validators;
+using DAL;
+using DAL.DbInit;
 using Hangfire;
-using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
-using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.ConfigureDataAccess(builder.Configuration);
+builder.Services.ConfigureBusinessLogic(builder.Configuration);
+
 builder.Services.AddControllers(options =>
 {
-    options.Filters.Add<Api.Modules.Validators.ValidationFilter>();
+    options.Filters.Add<ValidationFilter>();
 })
 .AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
-builder.Services.AddApplication();
-builder.Services.SetupServices();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
@@ -73,7 +73,6 @@ builder.Services
         };
     })
     .AddCookie();
-
 builder.Services.ConfigureOptions<JwtOptionsSetup>();
 builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
 
@@ -88,12 +87,6 @@ builder.Services.AddRateLimiter(options =>
     });
     
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-});
-
-builder.Host.UseWolverine(opts =>
-{
-    opts.Discovery.IncludeAssembly(typeof(ConfigureApplication).Assembly);
-    opts.Discovery.IncludeAssembly(typeof(Program).Assembly);
 });
 
 builder.Services.AddMemoryCache();

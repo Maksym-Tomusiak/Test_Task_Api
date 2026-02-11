@@ -18,14 +18,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+      <ProjectReference Include="..\BLL\BLL.csproj" />
+      <ProjectReference Include="..\DAL\DAL.csproj" />
+      <ProjectReference Include="..\Domain\Domain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Controllers\" />
-      <Folder Include="Dtos\" />
-      <Folder Include="Modules\Errors\" />
-      <Folder Include="Modules\Validators\" />
     </ItemGroup>
 
 </Project>

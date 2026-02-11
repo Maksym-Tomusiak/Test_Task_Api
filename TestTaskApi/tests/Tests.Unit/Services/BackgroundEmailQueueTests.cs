@@ -1,6 +1,6 @@
-using Application.Common.Models;
+using BLL.Models;
+using BLL.Services.Emails;
 using FluentAssertions;
-using Infrastructure.Services.Emails;
 
 namespace Tests.Unit.Services;
 
